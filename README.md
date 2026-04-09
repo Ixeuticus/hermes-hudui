@@ -69,15 +69,6 @@ cp -r dist/* ../backend/static/
 hermes-hudui
 ```
 
-## CLI Options
-
-```
-hermes-hudui                  # Start on :3001
-hermes-hudui --port 8080      # Custom port
-hermes-hudui --dev            # Development mode (auto-reload)
-hermes-hudui --hermes-dir /path  # Custom data directory
-```
-
 ## Development
 
 Two terminals:
