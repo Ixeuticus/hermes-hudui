@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from 'react'
 import { ThemeProvider } from './hooks/useTheme'
+import { refreshAll } from './hooks/useApi'
 import TopBar, { type TabId, TABS } from './components/TopBar'
 import CommandPalette from './components/CommandPalette'
 import BootScreen from './components/BootScreen'
@@ -78,7 +79,7 @@ export default function App() {
         onSelect={handleCommandSelect}
       />
 
-      <TopBar activeTab={activeTab} onTabChange={setActiveTab} />
+      <TopBar activeTab={activeTab} onTabChange={setActiveTab} onRefresh={refreshAll} />
 
       <main className={`flex-1 grid gap-2 p-2 overflow-auto auto-rows-fr ${GRID_CLASS[activeTab]}`}
             style={{ minHeight: 0 }}>

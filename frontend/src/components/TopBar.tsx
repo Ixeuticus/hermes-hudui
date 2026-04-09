@@ -26,6 +26,7 @@ export default function TopBar({ activeTab, onTabChange, onRefresh }: TopBarProp
   const { theme, setTheme, scanlines, setScanlines } = useTheme()
   const [showThemePicker, setShowThemePicker] = useState(false)
   const [time, setTime] = useState(new Date())
+  const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000)
@@ -50,9 +51,11 @@ export default function TopBar({ activeTab, onTabChange, onRefresh }: TopBarProp
         onTabChange('patterns')
         return
       }
-      // R to refresh (soft, not full page reload)
+      // R to refresh
       if (e.key === 'r') {
+        setRefreshing(true)
         onRefresh?.()
+        setTimeout(() => setRefreshing(false), 800)
         return
       }
       // T to toggle theme picker
@@ -91,6 +94,24 @@ export default function TopBar({ activeTab, onTabChange, onRefresh }: TopBarProp
           </button>
         ))}
       </div>
+
+      {/* Refresh button */}
+      <button
+        onClick={() => {
+          setRefreshing(true)
+          onRefresh?.()
+          setTimeout(() => setRefreshing(false), 800)
+        }}
+        className="px-1.5 py-1.5 text-[11px] shrink-0 cursor-pointer transition-colors duration-200"
+        style={{
+          color: refreshing ? 'var(--hud-primary)' : 'var(--hud-text-dim)',
+          textShadow: refreshing ? '0 0 8px var(--hud-primary-glow)' : 'none',
+          minHeight: '32px',
+        }}
+        title="Refresh data (r)"
+      >
+        {refreshing ? '↻' : '↺'}
+      </button>
 
       {/* Theme picker */}
       <div className="relative shrink-0">

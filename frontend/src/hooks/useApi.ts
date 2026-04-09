@@ -1,4 +1,4 @@
-import useSWR from 'swr'
+import useSWR, { mutate } from 'swr'
 
 const fetcher = async (url: string) => {
   const res = await fetch(url)
@@ -20,4 +20,13 @@ export function useApi<T = any>(path: string, refreshInterval = 30000) {
       console.warn(`[HUD] ${path}: ${err.message}`)
     },
   })
+}
+
+/** Force-revalidate all SWR caches (for manual refresh) */
+export function refreshAll() {
+  mutate(
+    (key) => typeof key === 'string' && key.startsWith('/api'),
+    undefined,
+    { revalidate: true }
+  )
 }
