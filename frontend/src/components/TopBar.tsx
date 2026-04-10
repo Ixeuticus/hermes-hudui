@@ -19,14 +19,12 @@ export type TabId = typeof TABS[number]['id']
 interface TopBarProps {
   activeTab: TabId
   onTabChange: (tab: TabId) => void
-  onRefresh?: () => void
 }
 
-export default function TopBar({ activeTab, onTabChange, onRefresh }: TopBarProps) {
+export default function TopBar({ activeTab, onTabChange }: TopBarProps) {
   const { theme, setTheme, scanlines, setScanlines } = useTheme()
   const [showThemePicker, setShowThemePicker] = useState(false)
   const [time, setTime] = useState(new Date())
-  const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
     const t = setInterval(() => setTime(new Date()), 1000)
@@ -51,13 +49,6 @@ export default function TopBar({ activeTab, onTabChange, onRefresh }: TopBarProp
         onTabChange('token-costs')
         return
       }
-      // R to refresh
-      if (e.key === 'r') {
-        setRefreshing(true)
-        onRefresh?.()
-        setTimeout(() => setRefreshing(false), 800)
-        return
-      }
       // T to toggle theme picker
       if (e.key === 't') {
         setShowThemePicker(p => !p)
@@ -65,7 +56,7 @@ export default function TopBar({ activeTab, onTabChange, onRefresh }: TopBarProp
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [onTabChange, onRefresh])
+  }, [onTabChange])
 
   return (
     <div className="flex items-center gap-1 px-3 py-1.5 border-b"
@@ -94,24 +85,6 @@ export default function TopBar({ activeTab, onTabChange, onRefresh }: TopBarProp
           </button>
         ))}
       </div>
-
-      {/* Refresh button */}
-      <button
-        onClick={() => {
-          setRefreshing(true)
-          onRefresh?.()
-          setTimeout(() => setRefreshing(false), 800)
-        }}
-        className="px-1.5 py-1.5 text-[13px] shrink-0 cursor-pointer transition-colors duration-200"
-        style={{
-          color: refreshing ? 'var(--hud-primary)' : 'var(--hud-text-dim)',
-          textShadow: refreshing ? '0 0 8px var(--hud-primary-glow)' : 'none',
-          minHeight: '32px',
-        }}
-        title="Refresh data (r)"
-      >
-        {refreshing ? '↻' : '↺'}
-      </button>
 
       {/* Theme picker */}
       <div className="relative shrink-0">

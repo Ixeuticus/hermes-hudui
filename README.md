@@ -101,7 +101,6 @@ Optional CRT scanline overlay — toggle via theme picker.
 |-----|--------|
 | `1`-`9`, `0` | Switch tabs |
 | `t` | Toggle theme picker |
-| `r` | Refresh all data (rarely needed with WebSocket live updates) |
 | `Ctrl+K` | Command palette |
 
 ## Architecture

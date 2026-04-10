@@ -1,6 +1,5 @@
 import { useState, useCallback, useMemo } from 'react'
 import { ThemeProvider } from './hooks/useTheme'
-import { refreshAll } from './hooks/useApi'
 import { useWebSocket } from './hooks/useWebSocket'
 import TopBar, { type TabId, TABS } from './components/TopBar'
 import CommandPalette from './components/CommandPalette'
@@ -83,7 +82,7 @@ export default function App() {
         onSelect={handleCommandSelect}
       />
 
-      <TopBar activeTab={activeTab} onTabChange={setActiveTab} onRefresh={refreshAll} />
+      <TopBar activeTab={activeTab} onTabChange={setActiveTab} />
 
       <div className="overflow-y-auto" style={{ flex: '1 1 0', height: 0, minHeight: 0 }}>
         <div className={`grid gap-2 p-2 ${GRID_CLASS[activeTab]}`}>
@@ -116,8 +115,6 @@ export default function App() {
           <span className="opacity-40">1-9</span> tabs
           <span className="mx-2">·</span>
           <span className="opacity-40">t</span> theme
-          <span className="mx-2">·</span>
-          <span className="opacity-40">r</span> refresh
         </span>
         <span className="sm:hidden">
           <span className="opacity-40">Ctrl+K</span> commands
