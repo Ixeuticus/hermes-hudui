@@ -3,6 +3,13 @@ import { useApi } from '../hooks/useApi'
 import Panel, { Sparkline } from './Panel'
 import MessageBubble from './chat/MessageBubble'
 
+function sourceColor(source: string) {
+  return source === 'telegram' ? 'var(--hud-accent)' : 'var(--hud-primary)'
+}
+
+const hoverOn = (e: React.MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = 'var(--hud-bg-hover)' }
+const hoverOff = (e: React.MouseEvent<HTMLButtonElement>) => { e.currentTarget.style.background = 'transparent' }
+
 // ── Transcript viewer ──────────────────────────────────────────────────────────
 
 function TranscriptViewer({ sessionId, onClose }: { sessionId: string; onClose: () => void }) {
@@ -97,13 +104,13 @@ function SearchResults({ query, onSelect }: { query: string; onSelect: (id: stri
             borderBottom: '1px solid var(--hud-border)',
             background: 'transparent',
           }}
-          onMouseEnter={e => (e.currentTarget.style.background = 'var(--hud-bg-hover)')}
-          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+          onMouseEnter={hoverOn}
+          onMouseLeave={hoverOff}
         >
           <div className="flex items-center gap-2">
             <span
               className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-              style={{ background: r.source === 'telegram' ? 'var(--hud-accent)' : 'var(--hud-primary)' }}
+              style={{ background: sourceColor(r.source) }}
             />
             <span className="flex-1 truncate">{r.title}</span>
             <span className="text-[11px] shrink-0" style={{ color: 'var(--hud-text-dim)' }}>
@@ -129,7 +136,7 @@ export default function SessionsPanel() {
   const [searchQuery, setSearchQuery] = useState('')
   const [submittedQuery, setSubmittedQuery] = useState('')
 
-  const handleSearch = useCallback((e: React.FormEvent) => {
+  const handleSearch = useCallback((e: React.SyntheticEvent) => {
     e.preventDefault()
     setSubmittedQuery(searchQuery.trim())
   }, [searchQuery])
@@ -239,12 +246,12 @@ export default function SessionsPanel() {
                 onClick={() => setActiveTranscript(s.id)}
                 className="w-full flex items-center gap-2 py-0.5 text-left cursor-pointer"
                 style={{ borderBottom: '1px solid var(--hud-border)', background: 'transparent' }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'var(--hud-bg-hover)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                onMouseEnter={hoverOn}
+                onMouseLeave={hoverOff}
                 title="Click to read transcript"
               >
                 <span className="w-2 h-2 rounded-full flex-shrink-0"
-                  style={{ background: s.source === 'telegram' ? 'var(--hud-accent)' : 'var(--hud-primary)' }} />
+                  style={{ background: sourceColor(s.source) }} />
                 <span className="flex-1 truncate">{s.title || s.id.slice(0, 8)}</span>
                 <span className="tabular-nums" style={{ color: 'var(--hud-text-dim)' }}>
                   {s.message_count}m {s.tool_call_count}t

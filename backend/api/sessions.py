@@ -2,22 +2,20 @@
 
 from __future__ import annotations
 
-import os
 import sqlite3
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Query
 
+from backend.collectors.utils import default_hermes_dir
+from backend.collectors.sessions import collect_sessions
+from .serialize import to_dict
+
 router = APIRouter()
 
 
 def _db_path() -> Path:
-    hermes_dir = os.environ.get("HERMES_HOME") or os.path.expanduser("~/.hermes")
-    return Path(hermes_dir) / "state.db"
-
-
-from backend.collectors.sessions import collect_sessions
-from .serialize import to_dict
+    return Path(default_hermes_dir()) / "state.db"
 
 
 @router.get("/sessions")
@@ -119,17 +117,15 @@ async def get_session_messages(session_id: str, limit: int = 200):
     if not db.exists():
         raise HTTPException(status_code=404, detail="Database not found")
 
+    conn = sqlite3.connect(str(db))
+    conn.row_factory = sqlite3.Row
     try:
-        conn = sqlite3.connect(str(db))
-        conn.row_factory = sqlite3.Row
-
         # Verify session exists
         session = conn.execute(
             "SELECT id, title, source, started_at FROM sessions WHERE id = ?",
             (session_id,),
         ).fetchone()
         if not session:
-            conn.close()
             raise HTTPException(status_code=404, detail="Session not found")
 
         messages = conn.execute(
@@ -142,8 +138,6 @@ async def get_session_messages(session_id: str, limit: int = 200):
             """,
             (session_id, limit),
         ).fetchall()
-
-        conn.close()
 
         return {
             "session_id": session_id,
@@ -168,3 +162,5 @@ async def get_session_messages(session_id: str, limit: int = 200):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
