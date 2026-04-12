@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Panel from './Panel'
-import { useChat, useChatAvailability, useChatSessions, loadSavedSessions } from '../hooks/useChat'
+import { useChat, useChatAvailability, useChatSessions, loadSavedSessions, loadMessages, saveMessages, removeMessages } from '../hooks/useChat'
 import SessionSidebar from './chat/SessionSidebar'
 import MessageThread from './chat/MessageThread'
 import Composer from './chat/Composer'
@@ -46,25 +46,26 @@ export default function ChatPanel() {
       // Backend lost sessions (server restart) — re-create and migrate messages
       restoringRef.current = true
       ;(async () => {
-        const idMap: Array<{ oldId: string; newId: string }> = []
-        for (const s of saved) {
-          const created = await createSession()
-          if (created) {
-            idMap.push({ oldId: s.id, newId: created.id })
-            // Migrate localStorage messages from old ID to new ID
-            const oldKey = `hud-chat-msgs-${s.id}`
-            const raw = localStorage.getItem(oldKey)
-            if (raw) {
-              localStorage.setItem(`hud-chat-msgs-${created.id}`, raw)
-              localStorage.removeItem(oldKey)
+        try {
+          const idMap: Array<{ oldId: string; newId: string }> = []
+          for (const s of saved) {
+            const created = await createSession()
+            if (created) {
+              idMap.push({ oldId: s.id, newId: created.id })
+              // Migrate localStorage messages from old ID to new ID
+              const msgs = loadMessages(s.id)
+              if (msgs.length > 0) {
+                saveMessages(created.id, msgs)
+              }
+              removeMessages(s.id)
             }
           }
+          if (idMap.length > 0) {
+            setActiveSessionId(idMap[0].newId)
+          }
+        } finally {
+          restoringRef.current = false
         }
-        // Select the first restored session
-        if (idMap.length > 0) {
-          setActiveSessionId(idMap[0].newId)
-        }
-        restoringRef.current = false
       })()
     } else if (sessions.length === 0 && saved.length === 0) {
       // Truly fresh — create initial session

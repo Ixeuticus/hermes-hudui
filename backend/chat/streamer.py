@@ -10,6 +10,9 @@ from typing import Any, Iterator
 from .models import StreamingEvent, ToolCall, ToolStatus
 
 
+_HEARTBEAT_INTERVAL_S = 15  # Keep SSE alive past proxy idle timeouts
+
+
 class ChatStreamer:
     """Manages SSE streaming for a single chat session."""
 
@@ -79,7 +82,7 @@ class ChatStreamer:
         """Iterate over events for SSE."""
         while not self._stopped.is_set():
             try:
-                event = self._queue.get(timeout=15)
+                event = self._queue.get(timeout=_HEARTBEAT_INTERVAL_S)
             except queue.Empty:
                 # Yield a heartbeat comment to keep the connection alive
                 yield StreamingEvent(type="heartbeat", data={})

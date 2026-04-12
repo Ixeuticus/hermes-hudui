@@ -19,19 +19,28 @@ export interface ChatMessage {
   isStreaming?: boolean
 }
 
+// ── Types ─────────────────────────────────────────────────────────────────
+
+export interface SessionSummary {
+  id: string
+  title: string
+  backend_type: string
+  is_active: boolean
+}
+
 // ── localStorage helpers ───────────────────────────────────────────────────
 
 const MESSAGES_KEY = (id: string) => `hud-chat-msgs-${id}`
 const SESSIONS_KEY = 'hud-chat-sessions'
 
-function saveMessages(sessionId: string, msgs: ChatMessage[]) {
+export function saveMessages(sessionId: string, msgs: ChatMessage[]) {
   try {
     const serializable = msgs.map(m => ({ ...m, isStreaming: false }))
     localStorage.setItem(MESSAGES_KEY(sessionId), JSON.stringify(serializable))
   } catch { /* quota exceeded — silently skip */ }
 }
 
-function loadMessages(sessionId: string): ChatMessage[] {
+export function loadMessages(sessionId: string): ChatMessage[] {
   try {
     const raw = localStorage.getItem(MESSAGES_KEY(sessionId))
     if (!raw) return []
@@ -40,17 +49,17 @@ function loadMessages(sessionId: string): ChatMessage[] {
   } catch { return [] }
 }
 
-function removeMessages(sessionId: string) {
+export function removeMessages(sessionId: string) {
   localStorage.removeItem(MESSAGES_KEY(sessionId))
 }
 
-export function saveSessions(sessions: Array<{ id: string; title: string; backend_type: string; is_active: boolean }>) {
+export function saveSessions(sessions: SessionSummary[]) {
   try {
     localStorage.setItem(SESSIONS_KEY, JSON.stringify(sessions))
   } catch { /* quota exceeded */ }
 }
 
-export function loadSavedSessions(): Array<{ id: string; title: string; backend_type: string; is_active: boolean }> {
+export function loadSavedSessions(): SessionSummary[] {
   try {
     const raw = localStorage.getItem(SESSIONS_KEY)
     return raw ? JSON.parse(raw) : []
@@ -120,15 +129,18 @@ export function useChat(sessionId: string | null) {
     prevSessionIdRef.current = sessionId
   }, [sessionId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Keep cache in sync with current messages as they arrive
+  // Keep in-memory cache in sync on every update; debounce localStorage writes
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
     if (sessionId) {
       messageCacheRef.current.set(sessionId, messages)
-      // Persist to localStorage (skip empty arrays to avoid overwriting stored history)
       if (messages.length > 0) {
-        saveMessages(sessionId, messages)
+        // Debounce localStorage writes to avoid thrashing during streaming
+        if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+        saveTimerRef.current = setTimeout(() => saveMessages(sessionId, messages), 1000)
       }
     }
+    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current) }
   }, [sessionId, messages])
 
   // Cleanup EventSource on unmount
@@ -401,7 +413,7 @@ export function useChatAvailability() {
 }
 
 export function useChatSessions() {
-  const [sessions, setSessions] = useState<Array<{ id: string; title: string; backend_type: string; is_active: boolean }>>(() => loadSavedSessions())
+  const [sessions, setSessions] = useState<SessionSummary[]>(() => loadSavedSessions())
   const [loading, setLoading] = useState(false)
 
   const loadSessions = useCallback(async () => {
